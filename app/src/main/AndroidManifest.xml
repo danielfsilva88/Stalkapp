@@ -19,6 +19,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service android:name=".BGIntentService" />
+
+        <activity android:name=".PrintScreen"></activity>
     </application>
 
 </manifest>
