@@ -45,15 +45,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        String id = Installation.id(this); // get appUser ID
-        String[] info = getSensorsData();
-        int nsensors = Integer.valueOf(info[3]);
-        String[] infos = new String[nsensors+1];
-        infos[0] = id;
-        System.arraycopy(info,0,infos,1,nsensors);
-
-        TextView textView = (TextView) findViewById(R.id.textView2);
-        textView.setText(infos[0] + "\n" + infos[1] + "\n" + infos[2] + "\n" + infos[3] + "\n");
         /*
         mContext = this.getApplicationContext();
 
@@ -102,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         String id = Installation.id(this); // get appUser ID
         String[] info = getSensorsData();
-        int nsensors = Integer.valueOf(info[3]);
+        int nsensors = Integer.valueOf(info[info.length-1]);
         String[] infos = new String[nsensors+1];
         infos[0] = id;
         System.arraycopy(info,0,infos,1,nsensors);
@@ -149,8 +140,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private String[] getSensorsData() {
-        // Teste para printar na tela do app o num de sensores e algumas das suas infos. Para obter outras infos:
+        // Pega o num de sensores e algumas das suas infos. Para obter outras infos:
         //https://developer.android.com/guide/topics/sensors/sensors_overview.html
+
         // creates an instance (mSensorManager) to access sensors
         SensorManager mSensorManager = ( SensorManager ) getSystemService( Context.SENSOR_SERVICE );
         List<Sensor> deviceSensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
@@ -158,7 +150,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         String name, vendor, version;
         String[] sensorinfo = new String [nsensors+1]; //+1 to pass number of sensors
 
-///*
         for (int i = 0; i < nsensors; i++){
 
             name = deviceSensors.get(i).getName();
@@ -166,61 +157,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             version = String.valueOf(deviceSensors.get(i).getVersion());
             sensorinfo[i] = ("" + name + "; " + vendor + "; " + version);
         }
-        sensorinfo[3] = Integer.toString(nsensors);
+        sensorinfo[nsensors] = Integer.toString(nsensors);
         return sensorinfo;
-
-    }
-
-    //@Override
-    public void onLocationChanged(Location location) {
-        mLat = location.getLatitude();
-        mLon = location.getLongitude();
-        //TextView coord = (TextView) findViewById(R.id.Coords);
-        //coord.setText( "Latitude = " + mLat + ";" + "Longitude = " + mLon );
-    }
-
-    private class MonitorTimer extends TimerTask {
-        @Override
-        public void run() {
-            DeadTimer mDeadTimer = new DeadTimer();
-            new Timer().schedule(mDeadTimer, 5000);
-            //double lastResulting = resulting;
-        }
-    }
-
-    // Creates a connection to http://labprodam.prefeitura.sp.gov.br/labfall/add
-    private class DeadTimer extends TimerTask {
-        @Override
-        public void run() {
-
-            final ConnectivityManager connectivityManager = ((ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE));
-
-            if (connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected()) {
-
-                try {
-                    URL url = new URL("http://labprodam.prefeitura.sp.gov.br/labfall/add");
-                    HttpURLConnection con = (HttpURLConnection) (url.openConnection());
-                    con.setRequestMethod("POST");
-                    con.setRequestProperty("USER-AGENT" , "Mozilla/5.0");
-                    con.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
-                    con.setDoInput(true);
-                    con.setDoOutput(true);
-
-                    String data = "id=0&type=Alert&lat=" + mLat + "&lon=" + mLon;
-
-                    DataOutputStream os = new DataOutputStream(con.getOutputStream());
-                    os.writeBytes(data);
-                    os.flush();
-                    os.close();
-
-                    Log.e("FallResponse", "" + con.getResponseCode());
-
-                    con.disconnect();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
     }
 
     // Functions created when declared "implements SensorEventListener, LocationListener"
@@ -314,4 +252,57 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onProviderDisabled(String provider) {
 
     }
+
+    //@Override
+    public void onLocationChanged(Location location) {
+        mLat = location.getLatitude();
+        mLon = location.getLongitude();
+        //TextView coord = (TextView) findViewById(R.id.Coords);
+        //coord.setText( "Latitude = " + mLat + ";" + "Longitude = " + mLon );
+    }
+
+    private class MonitorTimer extends TimerTask {
+        @Override
+        public void run() {
+            DeadTimer mDeadTimer = new DeadTimer();
+            new Timer().schedule(mDeadTimer, 5000);
+            //double lastResulting = resulting;
+        }
+    }
+
+    // Creates a connection to http://labprodam.prefeitura.sp.gov.br/labfall/add
+    private class DeadTimer extends TimerTask {
+        @Override
+        public void run() {
+
+            final ConnectivityManager connectivityManager = ((ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE));
+
+            if (connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected()) {
+
+                try {
+                    URL url = new URL("http://labprodam.prefeitura.sp.gov.br/labfall/add");
+                    HttpURLConnection con = (HttpURLConnection) (url.openConnection());
+                    con.setRequestMethod("POST");
+                    con.setRequestProperty("USER-AGENT" , "Mozilla/5.0");
+                    con.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
+                    con.setDoInput(true);
+                    con.setDoOutput(true);
+
+                    String data = "id=0&type=Alert&lat=" + mLat + "&lon=" + mLon;
+
+                    DataOutputStream os = new DataOutputStream(con.getOutputStream());
+                    os.writeBytes(data);
+                    os.flush();
+                    os.close();
+
+                    Log.e("FallResponse", "" + con.getResponseCode());
+
+                    con.disconnect();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
 }
