@@ -91,21 +91,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     // Called when user taps Cell Info button
+
     public void nextScreen(View view){
 
+
         Log.i(TAG, "Main: button_clicked");
-        /*
+/*
         String id = Installation.id(this); // get appUser ID
         String[] info = getSensorsData();
         int nsensors = Integer.valueOf(info[info.length-1]);
         String[] infos = new String[nsensors+1];
         infos[0] = id;
         System.arraycopy(info,0,infos,1,nsensors);
-        */
+*/
         Intent intent_button = new Intent(this, PrintScreen.class);
         //intent_button.putExtra(EXTRA_MESSAGE, infos);
         startActivity(intent_button);
+
     }
+
 
     public static class Installation {
         private static String sID = null;
