@@ -96,16 +96,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
         Log.i(TAG, "Main: button_clicked");
-/*
+
         String id = Installation.id(this); // get appUser ID
         String[] info = getSensorsData();
         int nsensors = Integer.valueOf(info[info.length-1]);
-        String[] infos = new String[nsensors+1];
+        String[] infos = new String[nsensors+2];
         infos[0] = id;
-        System.arraycopy(info,0,infos,1,nsensors);
-*/
+        System.arraycopy(info,0,infos,1,nsensors+1);
+
         Intent intent_button = new Intent(this, PrintScreen.class);
-        //intent_button.putExtra(EXTRA_MESSAGE, infos);
+        intent_button.putExtra(EXTRA_MESSAGE, infos);
         startActivity(intent_button);
 
     }

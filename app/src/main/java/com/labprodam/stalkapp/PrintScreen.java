@@ -16,7 +16,7 @@ public class PrintScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_print_screen);
         Log.i(TAG, "Return: you're here!");
-        /*
+
         // "pega" o intent da Main
         Intent intentinfo = getIntent();
         // armazena no array local (string[] infos) o array que foi passado pra ca
@@ -24,8 +24,9 @@ public class PrintScreen extends AppCompatActivity {
         String[] infos = intentinfo.getStringArrayExtra(MainActivity.EXTRA_MESSAGE);
 
         TextView textView = (TextView) findViewById(R.id.textView);
-        textView.setText(infos[0] + "\n" + infos[1] + "\n" + infos[2] + "\n" + infos[3] + "\n");
-        */
+        textView.setText(infos[0] + "\n" + infos[1] + "\n" + infos[2] + "\n" + infos[3] + "\n"
+                       + infos[19] + "\n" + infos[20] + "\n" + infos[21] + "\n" + infos[22] + "\n");
+
     }
 
     // Called when user taps Return button
