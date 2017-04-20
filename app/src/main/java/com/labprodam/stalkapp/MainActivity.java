@@ -35,6 +35,7 @@ import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener, LocationListener {
 
+    private static final String TAG = "com.labprodam.stalkapp";
     public static final String EXTRA_MESSAGE = "com.example.myfirstapp.MESSAGE";
     private double mLat, mLon;
     private Context mContext;
@@ -82,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, this);
         */
 
+        Log.i(TAG, "Main: calling BG");
         // starting the background service
         Intent intentbg = new Intent(this, BGIntentService.class);
         startService(intentbg);
@@ -91,15 +93,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     // Called when user taps Cell Info button
     public void nextScreen(View view){
 
+        Log.i(TAG, "Main: button_clicked");
+        /*
         String id = Installation.id(this); // get appUser ID
         String[] info = getSensorsData();
         int nsensors = Integer.valueOf(info[info.length-1]);
         String[] infos = new String[nsensors+1];
         infos[0] = id;
         System.arraycopy(info,0,infos,1,nsensors);
-
+        */
         Intent intent_button = new Intent(this, PrintScreen.class);
-        intent_button.putExtra(EXTRA_MESSAGE, infos);
+        //intent_button.putExtra(EXTRA_MESSAGE, infos);
         startActivity(intent_button);
     }
 
