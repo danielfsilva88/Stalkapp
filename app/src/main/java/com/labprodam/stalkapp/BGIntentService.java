@@ -5,16 +5,25 @@ package com.labprodam.stalkapp;
  * https://www.youtube.com/watch?v=-sBxmjrSn34
  */
 
+import android.Manifest;
 import android.app.IntentService;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+
+import java.util.Locale;
 
 public class BGIntentService extends IntentService {
 
     private static final String TAG = "com.labprodam.stalkapp";
+    private double mLat, mLon;
 
     public BGIntentService() {
         super("BGIntentService");
@@ -42,6 +51,39 @@ public class BGIntentService extends IntentService {
         // This is what service does
         Log.i(TAG, "it's working!");
 
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+
+            return;
+        }
+
+        Location loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+        String lat = String.format(Locale.getDefault(), "%.2f", loc.getLatitude());
+        String lon = String.format(Locale.getDefault(), "%.2f", loc.getLongitude());
+
+        // arrumar
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, (LocationListener) MainActivity);
+
+
+    }
+
+    //@Override
+    public void onLocationChanged(Location location) {
+        mLat = location.getLatitude();
+        mLon = location.getLongitude();
+        //TextView coord = (TextView) findViewById(R.id.Coords);
+        //coord.setText( "Latitude = " + mLat + ";" + "Longitude = " + mLon );
     }
 
 }
