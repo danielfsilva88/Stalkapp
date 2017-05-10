@@ -51,6 +51,14 @@ public class BGIntentService extends IntentService {
         // This is what service does
         Log.i(TAG, "it's working!");
 
+
+
+    }
+
+}
+
+/* Parte de inserção de GPS - chama o 'locationManager', pega lat e lon; tb usa uma funcao para atualizar o gps a cada variacao
+
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -76,7 +84,7 @@ public class BGIntentService extends IntentService {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, (LocationListener) MainActivity);
 
 
-    }
+
 
     //@Override
     public void onLocationChanged(Location location) {
@@ -86,4 +94,73 @@ public class BGIntentService extends IntentService {
         //coord.setText( "Latitude = " + mLat + ";" + "Longitude = " + mLon );
     }
 
-}
+*/
+
+/* Cria conecção para a página http://labprodam.prefeitura.sp.gov.br/labfall/add
+
+ private class MonitorTimer extends TimerTask {
+        @Override
+        public void run() {
+            DeadTimer mDeadTimer = new DeadTimer();
+            new Timer().schedule(mDeadTimer, 5000);
+            //double lastResulting = resulting;
+        }
+    }
+
+    // Creates a connection to http://labprodam.prefeitura.sp.gov.br/labfall/add
+    private class DeadTimer extends TimerTask {
+        @Override
+        public void run() {
+
+            final ConnectivityManager connectivityManager = ((ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE));
+
+            if (connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected()) {
+
+                try {
+                    URL url = new URL("http://labprodam.prefeitura.sp.gov.br/labfall/add");
+                    HttpURLConnection con = (HttpURLConnection) (url.openConnection());
+                    con.setRequestMethod("POST");
+                    con.setRequestProperty("USER-AGENT" , "Mozilla/5.0");
+                    con.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
+                    con.setDoInput(true);
+                    con.setDoOutput(true);
+
+                    String data = "id=0&type=Alert&lat=" + mLat + "&lon=" + mLon;
+
+                    DataOutputStream os = new DataOutputStream(con.getOutputStream());
+                    os.writeBytes(data);
+                    os.flush();
+                    os.close();
+
+                    Log.e("FallResponse", "" + con.getResponseCode());
+
+                    con.disconnect();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+*/
+
+/* criação da pagina que conecta o app ao db
+
+import MySQLdb
+@app.route("/add", methods=["POST"])
+def add():
+	data = request.form
+	if VerifyArgs(data, "id", "type", "lat", "lon"):
+		print ("Persists")
+		conn = MySQLdb.connect(host="localhost", user="root", db="fall")
+		cur = conn.cursor()
+
+		sql = "INSERT INTO occurrence (id_user, type, latitude, longitude) values (%s, %s, %s, %s)"
+		cur.execute(sql, (data["id"], data["type"], data["lat"], data["lon"]))
+
+		conn.commit()
+		conn.close()
+
+	return "Ok"
+
+ */
