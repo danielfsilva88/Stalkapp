@@ -20,12 +20,15 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import java.io.BufferedInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Locale;
@@ -46,21 +49,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /*
-        mContext = this.getApplicationContext();
 
+        mContext = this.getApplicationContext();
+/*
         // creates an instance (mSensorManager) to access sensors
         SensorManager mSensorManager = ( SensorManager ) getSystemService( Context.SENSOR_SERVICE );
         // accesses accelerometer sensor
         Sensor mAcc = mSensorManager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER );
         // controls the interval at which sensor events are sent to your application via the onSensorChanged() callback method (SENSOR_DELAY_FASTEST has 0 ms delay)
         mSensorManager.registerListener( this, mAcc, SensorManager.SENSOR_DELAY_FASTEST );
-
+*/
+        // getting last known GPS coordinates - if coords changes, function onLocationChanged is autocalled
+        ///*
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -68,20 +70,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
-
             return;
         }
-
-        // getting last known GPS coordinates - if coords changes, function onLocationChanged is autocalled
-        ///*
-        //Location loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        //String lat = String.format(Locale.getDefault(), "%.2f", loc.getLatitude());
-        //String lon = String.format(Locale.getDefault(), "%.2f", loc.getLongitude());
-        //TextView coord = (TextView) findViewById(R.id.Coords);
-        //coord.setText( "Latitude = " + lat + "º;\n" + "Longitude = " + lon + "º.");
-        //
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, this);
-        */
+        /**/
 
         Log.i(TAG, "Main: calling BG");
         // starting the background service
@@ -90,24 +82,80 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-    // Called when user taps Cell Info button
-
+    // Called when user taps "Cell Info" button
     public void nextScreen(View view){
 
 
-        Log.i(TAG, "Main: button_clicked");
+        Log.i(TAG, "Main: nextScreen_button_clicked");
 
         String id = Installation.id(this); // get appUser ID
         String[] info = getSensorsData();
         int nsensors = Integer.valueOf(info[info.length-1]);
-        String[] infos = new String[nsensors+2];
+        //String[] infos = new String[nsensors+2];
+        String[] infos = new String[nsensors+4];
         infos[0] = id;
-        System.arraycopy(info,0,infos,1,nsensors+1);
+        infos[1] = "Lat = " + mLat;
+        infos[2] = "Lon = " + mLon;
+        System.arraycopy(info,0,infos,3,nsensors+1);
 
         Intent intent_button = new Intent(this, PrintScreen.class);
         intent_button.putExtra(EXTRA_MESSAGE, infos);
         startActivity(intent_button);
 
+    }
+
+    // Called when user taps "Internet" button
+    public void Internet(View view){
+
+        Log.i(TAG, "Main: internet_button_clicked");
+        final ConnectivityManager connMan = ((ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE));
+        if (connMan.getActiveNetworkInfo() != null && connMan.getActiveNetworkInfo().isConnected()) {
+            Log.i(TAG, "Int: inside if");
+            URL url = null;
+            try {
+                Log.i(TAG, "Int: trying to get URL");
+
+                url = new URL("http://10.65.28.12:5000/add");
+                HttpURLConnection urlConnection = null;
+                try {
+                    Log.i(TAG, "Int: trying URL Connection");
+
+                    urlConnection = (HttpURLConnection) url.openConnection();
+
+                    urlConnection.setRequestMethod("POST");
+                    urlConnection.setRequestProperty("USER-AGENT" , "Mozilla/5.0");
+                    urlConnection.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
+                    urlConnection.setDoInput(true);
+                    urlConnection.setDoOutput(true);
+
+                    String data = "id=0&type=Alert&lat=" + mLat + "&lon=" + mLon;
+
+                    DataOutputStream os = new DataOutputStream(urlConnection.getOutputStream());
+                    os.writeBytes(data);
+                    os.flush();
+                    os.close();
+
+                    //InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+                    //readStream(in);
+
+                } catch (IOException e) {
+                    Log.i(TAG, "Int: deu ruim com URLConnection");
+                    e.printStackTrace();
+                } finally {
+                    Log.i(TAG, "Int: finally disconect");
+
+                    if (urlConnection != null) {
+                        urlConnection.disconnect();
+                    }
+                }
+            } catch (MalformedURLException e) {
+                Log.i(TAG, "Int: deu ruim com URL");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void readStream(InputStream in) {
     }
 
 
@@ -261,14 +309,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-    //@Override
+    @Override
     public void onLocationChanged(Location location) {
         mLat = location.getLatitude();
         mLon = location.getLongitude();
         //TextView coord = (TextView) findViewById(R.id.Coords);
         //coord.setText( "Latitude = " + mLat + ";" + "Longitude = " + mLon );
     }
-
+/*
     private class MonitorTimer extends TimerTask {
         @Override
         public void run() {
@@ -288,7 +336,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             if (connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected()) {
 
                 try {
-                    URL url = new URL("http://labprodam.prefeitura.sp.gov.br/labfall/add");
+                    URL url = new URL("http://10.65.28.12:5000/add");
                     HttpURLConnection con = (HttpURLConnection) (url.openConnection());
                     con.setRequestMethod("POST");
                     con.setRequestProperty("USER-AGENT" , "Mozilla/5.0");
@@ -312,5 +360,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         }
     }
+    */
 
 }
