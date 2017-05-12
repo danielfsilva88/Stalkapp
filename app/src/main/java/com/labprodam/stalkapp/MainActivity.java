@@ -42,6 +42,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public static final String EXTRA_MESSAGE = "com.example.myfirstapp.MESSAGE";
     private double mLat, mLon;
     private Context mContext;
+    private MonitorTimer mMonitor;
+    private DeadTimer mDeadTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,10 +106,60 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
+    private class MonitorTimer extends TimerTask {
+        @Override
+        public void run() {
+            DeadTimer mDeadTimer = new DeadTimer();
+            new Timer().schedule(mDeadTimer, 5000);
+            //double lastResulting = resulting;
+        }
+    }
+
+    // Creates a connection to http://labprodam.prefeitura.sp.gov.br/labfall/add
+    private class DeadTimer extends TimerTask {
+        @Override
+        public void run() {
+
+            final ConnectivityManager connectivityManager = ((ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE));
+
+            if (connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected()) {
+
+                try {
+                    URL url = new URL("http://10.65.30.11:5000/add");
+                    HttpURLConnection con = (HttpURLConnection) (url.openConnection());
+                    con.setRequestMethod("POST");
+                    con.setRequestProperty("USER-AGENT" , "Mozilla/5.0");
+                    con.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
+                    con.setDoInput(true);
+                    con.setDoOutput(true);
+
+                    String data = "id=0&type=Alert&lat=" + mLat + "&lon=" + mLon;
+
+                    DataOutputStream os = new DataOutputStream(con.getOutputStream());
+                    os.writeBytes(data);
+                    os.flush();
+                    os.close();
+
+                    Log.e("FallResponse", "" + con.getResponseCode());
+
+                    con.disconnect();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     // Called when user taps "Internet" button
     public void Internet(View view){
 
         Log.i(TAG, "Main: internet_button_clicked");
+
+        mMonitor = new MonitorTimer();
+        new Timer().schedule(mMonitor, 1000);
+
+
+        /*
         final ConnectivityManager connMan = ((ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE));
         if (connMan.getActiveNetworkInfo() != null && connMan.getActiveNetworkInfo().isConnected()) {
             Log.i(TAG, "Int: inside if");
@@ -153,6 +205,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 e.printStackTrace();
             }
         }
+        */
     }
 
     private void readStream(InputStream in) {
@@ -316,50 +369,4 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //TextView coord = (TextView) findViewById(R.id.Coords);
         //coord.setText( "Latitude = " + mLat + ";" + "Longitude = " + mLon );
     }
-/*
-    private class MonitorTimer extends TimerTask {
-        @Override
-        public void run() {
-            DeadTimer mDeadTimer = new DeadTimer();
-            new Timer().schedule(mDeadTimer, 5000);
-            //double lastResulting = resulting;
-        }
-    }
-
-    // Creates a connection to http://labprodam.prefeitura.sp.gov.br/labfall/add
-    private class DeadTimer extends TimerTask {
-        @Override
-        public void run() {
-
-            final ConnectivityManager connectivityManager = ((ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE));
-
-            if (connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected()) {
-
-                try {
-                    URL url = new URL("http://10.65.28.12:5000/add");
-                    HttpURLConnection con = (HttpURLConnection) (url.openConnection());
-                    con.setRequestMethod("POST");
-                    con.setRequestProperty("USER-AGENT" , "Mozilla/5.0");
-                    con.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
-                    con.setDoInput(true);
-                    con.setDoOutput(true);
-
-                    String data = "id=0&type=Alert&lat=" + mLat + "&lon=" + mLon;
-
-                    DataOutputStream os = new DataOutputStream(con.getOutputStream());
-                    os.writeBytes(data);
-                    os.flush();
-                    os.close();
-
-                    Log.e("FallResponse", "" + con.getResponseCode());
-
-                    con.disconnect();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-    */
-
 }
