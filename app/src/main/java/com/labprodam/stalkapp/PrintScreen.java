@@ -1,6 +1,9 @@
 package com.labprodam.stalkapp;
 
+import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -8,6 +11,8 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import java.util.List;
 
 
 public class PrintScreen extends AppCompatActivity {
@@ -26,12 +31,17 @@ public class PrintScreen extends AppCompatActivity {
 
         ListView listaSensores = (ListView) findViewById(R.id.lista);
 
+        SensorManager SM = ( SensorManager ) getSystemService( Context.SENSOR_SERVICE );
+        List<Sensor> deviceSensors = SM.getSensorList(Sensor.TYPE_ALL);
+
         // armazena no array local (string[] infos) o array que foi passado pra ca
         // da Main, por meio da funcao putExtra (na main) - getStringArrayExtra (neste intent)
-        String[] infos = intentinfo.getStringArrayExtra(MainActivity.EXTRA_MESSAGE);
+        //String[] infos = intentinfo.getStringArrayExtra(MainActivity.EXTRA_MESSAGE);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1, infos);
-        listaSensores.setAdapter(adapter);
+        //ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1, infos);
+        //listaSensores.setAdapter(adapter);
+        ArrayAdapter<Sensor> sensa = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1, deviceSensors);
+        listaSensores.setAdapter(sensa);
 
         //TextView textView = (TextView) findViewById(R.id.textView);
         //textView.setText(infos[0] + "\n" + infos[1] + "\n" + infos[2] + "\n" + infos[3] + "\n"

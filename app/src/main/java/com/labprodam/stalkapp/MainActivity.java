@@ -30,6 +30,7 @@ import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
@@ -42,8 +43,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public static final String EXTRA_MESSAGE = "com.example.myfirstapp.MESSAGE";
     private double mLat, mLon;
     private Context mContext;
-    private MonitorTimer mMonitor;
-    private DeadTimer mDeadTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,11 +86,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     // Called when user taps "Cell Info" button
     public void nextScreen(View view){
 
-
         Log.i(TAG, "Main: nextScreen_button_clicked");
 
         String id = Installation.id(this); // get appUser ID
-        String[] info = getSensorsData();
+        /*String[] info = getSensorsData();
         int nsensors = Integer.valueOf(info[info.length-1]);
         //String[] infos = new String[nsensors+2];
         String[] infos = new String[nsensors+4];
@@ -99,10 +97,84 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         infos[1] = "Lat = " + mLat;
         infos[2] = "Lon = " + mLon;
         System.arraycopy(info,0,infos,3,nsensors+1);
+*/
+        //List<Sensor> infos = getSensorsData();
+        //String[] sensores = (String[]) infos.toArray();
 
         Intent intent_button = new Intent(this, PrintScreen.class);
-        intent_button.putExtra(EXTRA_MESSAGE, infos);
+        //intent_button.putExtra(EXTRA_MESSAGE, infos);
+        //intent_button.putExtra(EXTRA_MESSAGE, sensores);
         startActivity(intent_button);
+
+    }
+
+    public static class Installation {
+        private static String sID = null;
+        private static final String INSTALLATION = "INSTALLATION";
+
+        public synchronized static String id(Context context) {
+            if (sID == null) {
+                File installation = new File(context.getFilesDir(), INSTALLATION);
+                try {
+                    if (!installation.exists())
+                        writeInstallationFile(installation);
+                    sID = readInstallationFile(installation);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return sID;
+        }
+
+        private static String readInstallationFile(File installation) throws IOException {
+            RandomAccessFile f = new RandomAccessFile(installation, "r");
+            byte[] bytes = new byte[(int) f.length()];
+            f.readFully(bytes);
+            f.close();
+            return new String(bytes);
+        }
+
+        // http://stackoverflow.com/questions/2885173/how-do-i-create-a-file-and-write-to-it-in-java
+        private static void writeInstallationFile(File installation) throws IOException {
+            FileOutputStream out = new FileOutputStream(installation);
+            String id = UUID.randomUUID().toString();
+            out.write(id.getBytes());
+            out.close();
+        }
+
+    }
+/*
+    private List<Sensor> getSensorsData() {
+        // Pega o num de sensores e algumas das suas infos. Para obter outras infos:
+        //https://developer.android.com/guide/topics/sensors/sensors_overview.html
+
+        // creates an instance (mSensorManager) to access sensors
+        SensorManager SM = ( SensorManager ) getSystemService( Context.SENSOR_SERVICE );
+        List<Sensor> deviceSensors = SM.getSensorList(Sensor.TYPE_ALL);
+        /*int nsensors = deviceSensors.size();
+        String name, vendor, version;
+        String[] sensorinfo = new String [nsensors+1]; //+1 to pass number of sensors
+
+        for (int i = 0; i < nsensors; i++){
+
+            name = deviceSensors.get(i).getName();
+            vendor = deviceSensors.get(i).getVendor();
+            version = String.valueOf(deviceSensors.get(i).getVersion());
+            sensorinfo[i] = ("" + name + "; " + vendor + "; " + version);
+        }
+        sensorinfo[nsensors] = Integer.toString(nsensors);
+        return sensorinfo;
+        return deviceSensors;
+    }
+*/
+
+    // Called when user taps "Internet" button
+    public void Internet(View view){
+
+        Log.i(TAG, "Main: internet_button_clicked");
+
+        MonitorTimer mMonitor = new MonitorTimer();
+        new Timer().schedule(mMonitor, 1000);
 
     }
 
@@ -111,7 +183,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         public void run() {
             DeadTimer mDeadTimer = new DeadTimer();
             new Timer().schedule(mDeadTimer, 5000);
-            //double lastResulting = resulting;
         }
     }
 
@@ -150,125 +221,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    // Called when user taps "Internet" button
-    public void Internet(View view){
-
-        Log.i(TAG, "Main: internet_button_clicked");
-
-        mMonitor = new MonitorTimer();
-        new Timer().schedule(mMonitor, 1000);
-
-
-        /*
-        final ConnectivityManager connMan = ((ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE));
-        if (connMan.getActiveNetworkInfo() != null && connMan.getActiveNetworkInfo().isConnected()) {
-            Log.i(TAG, "Int: inside if");
-            URL url = null;
-            try {
-                Log.i(TAG, "Int: trying to get URL");
-
-                url = new URL("http://10.65.28.12:5000/add");
-                HttpURLConnection urlConnection = null;
-                try {
-                    Log.i(TAG, "Int: trying URL Connection");
-
-                    urlConnection = (HttpURLConnection) url.openConnection();
-
-                    urlConnection.setRequestMethod("POST");
-                    urlConnection.setRequestProperty("USER-AGENT" , "Mozilla/5.0");
-                    urlConnection.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
-                    urlConnection.setDoInput(true);
-                    urlConnection.setDoOutput(true);
-
-                    String data = "id=0&type=Alert&lat=" + mLat + "&lon=" + mLon;
-
-                    DataOutputStream os = new DataOutputStream(urlConnection.getOutputStream());
-                    os.writeBytes(data);
-                    os.flush();
-                    os.close();
-
-                    //InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-                    //readStream(in);
-
-                } catch (IOException e) {
-                    Log.i(TAG, "Int: deu ruim com URLConnection");
-                    e.printStackTrace();
-                } finally {
-                    Log.i(TAG, "Int: finally disconect");
-
-                    if (urlConnection != null) {
-                        urlConnection.disconnect();
-                    }
-                }
-            } catch (MalformedURLException e) {
-                Log.i(TAG, "Int: deu ruim com URL");
-                e.printStackTrace();
-            }
-        }
-        */
-    }
-
-    private void readStream(InputStream in) {
-    }
-
-
-    public static class Installation {
-        private static String sID = null;
-        private static final String INSTALLATION = "INSTALLATION";
-
-        public synchronized static String id(Context context) {
-            if (sID == null) {
-                File installation = new File(context.getFilesDir(), INSTALLATION);
-                try {
-                    if (!installation.exists())
-                        writeInstallationFile(installation);
-                    sID = readInstallationFile(installation);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            return sID;
-        }
-
-        private static String readInstallationFile(File installation) throws IOException {
-            RandomAccessFile f = new RandomAccessFile(installation, "r");
-            byte[] bytes = new byte[(int) f.length()];
-            f.readFully(bytes);
-            f.close();
-            return new String(bytes);
-        }
-
-        // http://stackoverflow.com/questions/2885173/how-do-i-create-a-file-and-write-to-it-in-java
-        private static void writeInstallationFile(File installation) throws IOException {
-            FileOutputStream out = new FileOutputStream(installation);
-            String id = UUID.randomUUID().toString();
-            out.write(id.getBytes());
-            out.close();
-        }
-
-    }
-
-    private String[] getSensorsData() {
-        // Pega o num de sensores e algumas das suas infos. Para obter outras infos:
-        //https://developer.android.com/guide/topics/sensors/sensors_overview.html
-
-        // creates an instance (mSensorManager) to access sensors
-        SensorManager mSensorManager = ( SensorManager ) getSystemService( Context.SENSOR_SERVICE );
-        List<Sensor> deviceSensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-        int nsensors = deviceSensors.size();
-        String name, vendor, version;
-        String[] sensorinfo = new String [nsensors+1]; //+1 to pass number of sensors
-
-        for (int i = 0; i < nsensors; i++){
-
-            name = deviceSensors.get(i).getName();
-            vendor = deviceSensors.get(i).getVendor();
-            version = String.valueOf(deviceSensors.get(i).getVersion());
-            sensorinfo[i] = ("" + name + "; " + vendor + "; " + version);
-        }
-        sensorinfo[nsensors] = Integer.toString(nsensors);
-        return sensorinfo;
-    }
 
     // Functions created when declared "implements SensorEventListener, LocationListener"
     /**
