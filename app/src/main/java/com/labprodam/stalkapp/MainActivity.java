@@ -40,7 +40,6 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity implements SensorEventListener, LocationListener {
 
     private static final String TAG = "com.labprodam.stalkapp";
-    public static final String EXTRA_MESSAGE = "com.example.myfirstapp.MESSAGE";
     private double mLat, mLon;
     private Context mContext;
 
@@ -89,21 +88,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Log.i(TAG, "Main: nextScreen_button_clicked");
 
         String id = Installation.id(this); // get appUser ID
-        /*String[] info = getSensorsData();
-        int nsensors = Integer.valueOf(info[info.length-1]);
-        //String[] infos = new String[nsensors+2];
-        String[] infos = new String[nsensors+4];
-        infos[0] = id;
-        infos[1] = "Lat = " + mLat;
-        infos[2] = "Lon = " + mLon;
-        System.arraycopy(info,0,infos,3,nsensors+1);
-*/
-        //List<Sensor> infos = getSensorsData();
-        //String[] sensores = (String[]) infos.toArray();
-
         Intent intent_button = new Intent(this, PrintScreen.class);
-        //intent_button.putExtra(EXTRA_MESSAGE, infos);
-        //intent_button.putExtra(EXTRA_MESSAGE, sensores);
         startActivity(intent_button);
 
     }
@@ -141,7 +126,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             out.write(id.getBytes());
             out.close();
         }
-
     }
 /*
     private List<Sensor> getSensorsData() {
